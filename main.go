@@ -50,8 +50,8 @@ func main() {
 
 	nodes := []*mesh.MeshNode{createNode(ctx, rootCert, priv_key, nil)}
 
-	for range 30 {
-		randomNode := mrand.Int31n(int32(len(nodes)))
+	for range 4 {
+		randomNode := mrand.Int31n(min(int32(3), int32(len(nodes))))
 
 		node := createNode(ctx, rootCert, priv_key, []string{nodes[randomNode].Addr().String()})
 		nodes = append(nodes, node)
@@ -61,8 +61,14 @@ func main() {
 		go node.Run()
 	}
 
+	peerStores := []*mesh.PeerStore{}
+
+	for _, node := range nodes {
+		peerStores = append(peerStores, node.PeerStore())
+	}
+
 	for {
-		<-time.After(time.Second * 3)
+		<-time.After(time.Second)
 		s := make([]int, 0)
 		for _, node := range nodes {
 			kp1, _ := node.ListKnownPeers(ctx, nil)

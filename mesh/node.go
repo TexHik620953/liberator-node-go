@@ -8,11 +8,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"liberator-node-go/infra/ipapi"
 	"liberator-node-go/mesh/meshproto"
 	"log"
-	"maps"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/quic-go/quic-go"
@@ -36,13 +35,14 @@ type MeshNode struct {
 	lis       *quic.Listener
 	nodeId    string
 
-	connectedNodes    map[string]*MeshConnection
-	connectedNodesMut sync.RWMutex
+	peerStore *PeerStore
 
 	eventSink chan *ConnectionEvent
 
 	grpcServer        *grpc.Server
 	globalBiStreamLis *BiStreamLis
+
+	ipInfo *ipapi.IpInfo
 }
 
 func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x509.Certificate) (*MeshNode, error) {
@@ -66,29 +66,48 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 	nodeId := hex.EncodeToString(hash[:])
 
 	n := &MeshNode{
-		ctx:            ctx,
-		cfg:            cfg,
-		connectedNodes: make(map[string]*MeshConnection),
-		cert:           cert,
-		serverCaPool:   x509.NewCertPool(),
-		eventSink:      make(chan *ConnectionEvent, 10),
-		grpcServer:     grpc.NewServer(),
-		nodeId:         nodeId,
+		ctx:          ctx,
+		cfg:          cfg,
+		cert:         cert,
+		serverCaPool: x509.NewCertPool(),
+		eventSink:    make(chan *ConnectionEvent, 10),
+		grpcServer:   grpc.NewServer(),
+		nodeId:       nodeId,
+		peerStore:    newPeerStore(),
 	}
 	n.serverCaPool.AddCert(rootCa)
+
+	/*
+		n.ipInfo, err = ipapi.GetIpInfo()
+		if err != nil {
+			return nil, err
+		}*/
+	{
+		// Add self to peerstore
+		pi, ex := n.peerStore.Get(n.nodeId)
+		if !ex {
+			pi = &PeerInfo{
+				Id:        n.nodeId,
+				Connected: false,
+				IpInfo:    nil,
+				LastSeen:  time.Now(),
+				RTTMap:    map[string]int64{},
+				Adresses:  map[string]struct{}{},
+			}
+			n.peerStore.Set(pi)
+		}
+		pi.IpInfo = n.ipInfo
+	}
 
 	addr, err := net.ResolveUDPAddr("udp", cfg.ListenAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	// Создаем один общий UDP сокет для этой ноды
 	n.udpBind, err = net.ListenUDP("udp", addr)
 	if err != nil {
 		return nil, err
 	}
-
-	// Оборачиваем его в единый QUIC Транспорт
 	n.transport = &quic.Transport{
 		Conn: n.udpBind,
 	}
@@ -132,7 +151,7 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 
 	return n, nil
 }
-func (n *MeshNode) DialAddr(addr string) (*MeshConnection, error) {
+func (n *MeshNode) meshConnect(addr string) (*MeshConnection, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return nil, err
@@ -177,26 +196,20 @@ func (n *MeshNode) DialAddr(addr string) (*MeshConnection, error) {
 	return n.handleConnection(conn, false)
 }
 func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*MeshConnection, error) {
-	meshConn, err := newConnection(conn, n.eventSink)
+	meshConn, err := newConnection(conn, n.eventSink, func(mc *MeshConnection) {
+		conn, ex := n.peerStore.Get(mc.ID())
+		if ex {
+			conn.Connected = false
+		}
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	n.connectedNodesMut.Lock()
-	defer n.connectedNodesMut.Unlock()
-
-	// Remove all closed
-	toRemove := make([]string, 0)
-	for k, p := range n.connectedNodes {
-		if p.closed.Load() {
-			toRemove = append(toRemove, k)
-		}
-	}
-	for _, k := range toRemove {
-		delete(n.connectedNodes, k)
+	if meshConn.ID() == n.nodeId {
+		return nil, fmt.Errorf("cant connect to itself")
 	}
 
-	original, ex := n.connectedNodes[meshConn.ID()]
+	original, ex := n.peerStore.GetConnected(meshConn.ID())
 	if ex {
 		localID := n.nodeId
 		remoteID := meshConn.ID()
@@ -204,25 +217,31 @@ func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*MeshConn
 		if localID < remoteID {
 			if isIncoming {
 				meshConn.Close()
-				return original, nil
+				return original.Peer, nil
 			}
-			original.Close()
+			original.Peer.Close()
 			log.Printf("Dial won collision against %s. Replacing.", meshConn.ID())
 		} else {
 			if !isIncoming {
 				meshConn.Close()
-				return original, nil
+				return original.Peer, nil
 			}
-			original.Close()
+			original.Peer.Close()
 
 			log.Printf("Incoming Accept won collision against %s. Replacing.", meshConn.ID())
 		}
 	}
 
-	n.connectedNodes[meshConn.ID()] = meshConn
+	n.peerStore.Set(&PeerInfo{
+		Id:        meshConn.ID(),
+		Peer:      meshConn,
+		Connected: true,
+		IpInfo:    nil,
+		LastSeen:  time.Now(),
+		RTTMap:    map[string]int64{},
+		Adresses:  map[string]struct{}{},
+	})
 	go meshConn.Run()
-
-	log.Printf("established connection from %s to %s", n.nodeId, meshConn.ID())
 
 	return meshConn, nil
 }
@@ -282,76 +301,215 @@ func (n *MeshNode) Addr() net.Addr {
 func (n *MeshNode) nodeWorker() {
 	// Connect to all bootstrap nodes
 	for _, bn := range n.cfg.BootstrapNodes {
-		_, err := n.DialAddr(bn)
+		_, err := n.meshConnect(bn)
 		if err != nil {
 			log.Printf("failed to connect to bootstrap node %s: %v", bn, err)
 		}
 	}
 
 	// Some time to bootstrap and connect to everyone
-	<-time.After(time.Second * 5)
-
-	pullDiscovery := time.NewTicker(time.Second * 5)
+	pullDiscovery := time.NewTicker(time.Second * 2)
+	rttUpdate := time.NewTicker(time.Second * 2)
+	connector := time.NewTicker(time.Second * 2)
 	go func() {
 		for range pullDiscovery.C {
-			// Snapshot current peers not to hold mutex
-			peers := make(map[string]*MeshConnection)
+			select {
+			case <-n.ctx.Done():
+				return
+			default:
+			}
 
-			n.connectedNodesMut.RLock()
-			maps.Copy(peers, n.connectedNodes)
-			n.connectedNodesMut.RUnlock()
-
-			connectCandidates := map[string]*meshproto.PeerInfo{}
-			for _, peer := range peers {
-				peerKnown, err := peer.ListKnownPeers(n.ctx)
+			// Collect peers info from all connected peers
+			peerInfos := map[string][]*meshproto.PeerInfo{}
+			for _, peer := range n.peerStore.ListConnected() {
+				peerKnown, err := peer.Peer.ListKnownPeers(n.ctx)
 				if err != nil {
 					log.Printf("failed to list peer know peers: %v", err)
 					continue
 				}
-				for _, cand := range peerKnown.Peers {
-					if cand.Id == n.nodeId {
-						continue // Do not connect to ourself
-					}
-					if _, ex := peers[cand.Id]; ex {
-						// TODO: Handle unreachable nodes, we cant connect to.
-						continue // We already connected to this host
-					}
-					connectCandidates[cand.Id] = cand
-				}
-			}
-			for _, cand := range connectCandidates {
-				_, err := n.DialAddr(cand.Addr)
-				if err != nil {
-					log.Printf("failed to connect to new peer %s: %v", cand.Addr, err)
-					continue
-				}
+				peerInfos[peer.Id] = peerKnown.Peers
 			}
 
+			for _, knownPeers := range peerInfos {
+				for _, cand := range knownPeers {
+					var ipInfo *ipapi.IpInfo
+					if cand.IpInfo != nil {
+						ipInfo = &ipapi.IpInfo{
+							Country:     cand.IpInfo.Country,
+							CountryCode: cand.IpInfo.CountryCode,
+							Region:      cand.IpInfo.Region,
+							RegionName:  cand.IpInfo.RegionName,
+							City:        cand.IpInfo.City,
+							Zip:         cand.IpInfo.Zip,
+							Lat:         cand.IpInfo.Lat,
+							Lon:         cand.IpInfo.Lon,
+							Timezone:    cand.IpInfo.Timezone,
+							Isp:         cand.IpInfo.Isp,
+							Org:         cand.IpInfo.Org,
+							As:          cand.IpInfo.As,
+							Query:       cand.IpInfo.Query,
+						}
+					}
+					if !n.peerStore.Exists(cand.Id) {
+						// Add basic peer info if its new for us
+						pi := &PeerInfo{
+							Id:        cand.Id,
+							Connected: false,
+							LastSeen:  time.Unix(cand.LastSeen, 0),
+							RTTMap:    map[string]int64{},
+							Adresses:  map[string]struct{}{},
+						}
+						// parse all adresses
+						if _, err := net.ResolveUDPAddr("udp", cand.Addr); err == nil && len(cand.Addr) > 0 {
+							pi.Adresses[cand.Addr] = struct{}{}
+						}
+						if cand.IpInfo != nil {
+							pi.IpInfo = ipInfo
+							if _, err := net.ResolveUDPAddr("udp", ipInfo.Query); err == nil && len(ipInfo.Query) > 0 {
+								pi.Adresses[ipInfo.Query] = struct{}{}
+							}
+						}
+						n.peerStore.Set(pi)
+					} else {
+						// Update its info, if we already know about this peer
+						pi, ex := n.peerStore.Get(cand.Id)
+						if !ex {
+							continue
+						}
+						pi.IpInfo = ipInfo
+					}
+				}
+			}
+			// Now when all peers added, update rttmap
+			for infoOrigin, knownPeers := range peerInfos {
+				for _, peerInfo := range knownPeers {
+					peer, ex := n.peerStore.Get(peerInfo.Id)
+					if !ex {
+						continue // Should not happen
+					}
+					peer.RTTMap[infoOrigin] = peerInfo.Rtt
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for range rttUpdate.C {
+			select {
+			case <-n.ctx.Done():
+				return
+			default:
+			}
+			for _, peer := range n.peerStore.ListConnected() {
+				rtt := peer.Peer.conn.ConnectionStats().SmoothedRTT.Microseconds()
+				pi, ex := n.peerStore.Get(peer.Id)
+				if !ex {
+					// Should not reach here
+					continue
+				}
+				pi.RTTMap[n.nodeId] = rtt
+			}
+		}
+	}()
+
+	go func() {
+		for range connector.C {
+			select {
+			case <-n.ctx.Done():
+				return
+			default:
+			}
+			// Do not connect to outselfs
+			for _, connCand := range n.peerStore.ListUnconnected() {
+				if connCand.Id == n.nodeId {
+					continue
+				}
+
+				go func(cand *PeerInfo) {
+					for addr, _ := range cand.Adresses {
+						peer, err := n.meshConnect(addr)
+						if err != nil {
+							log.Printf("failed to connect to new peer %s: %v", addr, err)
+							continue
+						}
+
+						pi, ex := n.peerStore.Get(peer.ID())
+						if !ex {
+							pi = &PeerInfo{
+								Id:        peer.ID(),
+								Connected: true,
+								Peer:      peer,
+								LastSeen:  time.Now(),
+								RTTMap:    map[string]int64{},
+								Adresses:  map[string]struct{}{},
+							}
+							n.peerStore.Set(pi)
+						}
+						if peer.ID() != cand.Id {
+							// Collision, node behind this addr has different id
+							// Remove addr from node ips, and assign to new connection
+							delete(cand.Adresses, addr)
+							pi.Adresses[addr] = struct{}{}
+							return
+						} else {
+							pi.Connected = true
+							pi.LastSeen = time.Now()
+							pi.Peer = peer
+						}
+						return
+					}
+				}(connCand)
+			}
 		}
 	}()
 
 	select {
 	case <-n.ctx.Done():
 		pullDiscovery.Stop()
+		rttUpdate.Stop()
 	}
+}
+func (n *MeshNode) PeerStore() *PeerStore {
+	return n.peerStore
 }
 
 // MeshService grpc implementation
-
 func (n *MeshNode) ListKnownPeers(ctx context.Context, _ *emptypb.Empty) (*meshproto.ListKnownPeersResponse, error) {
 	resp := &meshproto.ListKnownPeersResponse{
 		Peers: make([]*meshproto.PeerInfo, 0),
 	}
-	n.connectedNodesMut.RLock()
-	for _, peer := range n.connectedNodes {
-		if peer.closed.Load() {
-			continue
+
+	for _, peer := range n.peerStore.List() {
+		pi := &meshproto.PeerInfo{
+			Id:       peer.Id,
+			LastSeen: peer.LastSeen.Unix(),
 		}
-		resp.Peers = append(resp.Peers, &meshproto.PeerInfo{
-			Id:   peer.ID(),
-			Addr: peer.RemoteAddr().String(),
-		})
+		if peer.Connected {
+			pi.Addr = peer.Peer.RemoteAddr().String()
+		}
+		rtt, ex := peer.RTTMap[n.nodeId]
+		if ex {
+			pi.Rtt = rtt
+		}
+
+		if peer.IpInfo != nil {
+			pi.IpInfo = &meshproto.IpInfo{
+				Country:     peer.IpInfo.Country,
+				CountryCode: peer.IpInfo.CountryCode,
+				Region:      peer.IpInfo.Region,
+				RegionName:  peer.IpInfo.RegionName,
+				City:        peer.IpInfo.City,
+				Zip:         peer.IpInfo.Zip,
+				Lat:         peer.IpInfo.Lat,
+				Lon:         peer.IpInfo.Lon,
+				Timezone:    peer.IpInfo.Timezone,
+				Isp:         peer.IpInfo.Isp,
+				Org:         peer.IpInfo.Org,
+				As:          peer.IpInfo.As,
+				Query:       peer.IpInfo.As,
+			}
+		}
+		resp.Peers = append(resp.Peers, pi)
 	}
-	n.connectedNodesMut.RUnlock()
 	return resp, nil
 }

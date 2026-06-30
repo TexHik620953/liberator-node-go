@@ -26,10 +26,10 @@ type MeshConnection struct {
 	defaultClient *grpc.ClientConn
 	meshService   meshproto.MeshServiceClient
 
-	closed atomic.Bool
+	closeFunc func(c *MeshConnection)
 }
 
-func newConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent) (*MeshConnection, error) {
+func newConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, closeFunc func(c *MeshConnection)) (*MeshConnection, error) {
 	state := conn.ConnectionState().TLS
 	if len(state.PeerCertificates) == 0 {
 		return nil, fmt.Errorf("peer is not authenticated")
@@ -46,9 +46,8 @@ func newConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent) (*MeshCon
 		nodeId:    nodeId,
 		conn:      conn,
 		eventSink: eventSink,
-		closed:    atomic.Bool{},
+		closeFunc: closeFunc,
 	}
-	c.closed.Store(false)
 	var err error
 	c.defaultClient, err = c.NewGrpcClient()
 	if err != nil {
@@ -80,7 +79,7 @@ func (c *MeshConnection) Run() {
 
 	go c.readDatagrams(ctx)
 	c.acceptBiStreams(ctx)
-	c.closed.Store(true)
+	c.closeFunc(c)
 }
 
 func (c *MeshConnection) readDatagrams(ctx context.Context) {
