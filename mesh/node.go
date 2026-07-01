@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"liberator-node-go/infra/ipapi"
+	"liberator-node-go/mesh/components"
+	"liberator-node-go/mesh/connection"
 	"liberator-node-go/mesh/meshproto"
 	"log"
 	"net"
@@ -19,12 +21,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-//conn.ConnectionStats().RTT
+type MeshConfig struct {
+	ListenAddr     string
+	BootstrapNodes []string
+}
 
 type MeshNode struct {
-	meshproto.MeshServiceServer
-	ctx context.Context
-	cfg *MeshConfig
+	ctx    context.Context
+	cfg    *MeshConfig
+	ipInfo *ipapi.IpInfo
 
 	cert         *tls.Certificate
 	serverCaPool *x509.CertPool
@@ -35,14 +40,12 @@ type MeshNode struct {
 	lis       *quic.Listener
 	nodeId    string
 
-	peerStore *PeerStore
-
-	eventSink chan *ConnectionEvent
+	eventSink chan *connection.ConnectionEvent
 
 	grpcServer        *grpc.Server
-	globalBiStreamLis *BiStreamLis
+	globalBiStreamLis *connection.BiStreamLis
 
-	ipInfo *ipapi.IpInfo
+	discovery *DiscoveryService
 }
 
 func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x509.Certificate) (*MeshNode, error) {
@@ -70,10 +73,9 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 		cfg:          cfg,
 		cert:         cert,
 		serverCaPool: x509.NewCertPool(),
-		eventSink:    make(chan *ConnectionEvent, 10),
+		eventSink:    make(chan *connection.ConnectionEvent, 10),
 		grpcServer:   grpc.NewServer(),
 		nodeId:       nodeId,
-		peerStore:    newPeerStore(),
 	}
 	n.serverCaPool.AddCert(rootCa)
 
@@ -86,7 +88,7 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 		// Add self to peerstore
 		pi, ex := n.peerStore.Get(n.nodeId)
 		if !ex {
-			pi = &PeerInfo{
+			pi = &components.PeerInfo{
 				Id:        n.nodeId,
 				Connected: false,
 				IpInfo:    nil,
@@ -143,7 +145,7 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 		return nil, err
 	}
 
-	n.globalBiStreamLis = newBiStreamLis(ctx, n.lis.Addr())
+	n.globalBiStreamLis = connection.NewBiStreamLis(ctx, n.lis.Addr())
 
 	log.Printf("created node with id: %s", n.nodeId)
 
@@ -151,7 +153,7 @@ func New(ctx context.Context, cfg *MeshConfig, cert *tls.Certificate, rootCa *x5
 
 	return n, nil
 }
-func (n *MeshNode) meshConnect(addr string) (*MeshConnection, error) {
+func (n *MeshNode) meshConnect(addr string) (*connection.MeshConnection, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return nil, err
@@ -195,8 +197,8 @@ func (n *MeshNode) meshConnect(addr string) (*MeshConnection, error) {
 
 	return n.handleConnection(conn, false)
 }
-func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*MeshConnection, error) {
-	meshConn, err := newConnection(conn, n.eventSink, func(mc *MeshConnection) {
+func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*connection.MeshConnection, error) {
+	meshConn, err := connection.NewMeshConnection(conn, n.eventSink, func(mc *connection.MeshConnection) {
 		conn, ex := n.peerStore.Get(mc.ID())
 		if ex {
 			conn.Connected = false
@@ -232,7 +234,7 @@ func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*MeshConn
 		}
 	}
 
-	n.peerStore.Set(&PeerInfo{
+	n.peerStore.Set(&components.PeerInfo{
 		Id:        meshConn.ID(),
 		Peer:      meshConn,
 		Connected: true,
@@ -245,9 +247,9 @@ func (n *MeshNode) handleConnection(conn *quic.Conn, isIncoming bool) (*MeshConn
 
 	return meshConn, nil
 }
-func (n *MeshNode) handleEvent(event *ConnectionEvent) {
+func (n *MeshNode) handleEvent(event *connection.ConnectionEvent) {
 	switch event.Type {
-	case EventType_NewBiStreamConnection:
+	case connection.EventType_NewBiStreamConnection:
 		n.globalBiStreamLis.PushConnection(event.NewBiStream)
 	}
 }
@@ -287,7 +289,7 @@ func (n *MeshNode) Run() {
 		}
 		go func() {
 			meshConn, err := n.handleConnection(conn, true)
-			if err != nil {
+			if err != nil && meshConn != nil {
 				meshConn.Close()
 			}
 		}()
@@ -307,7 +309,6 @@ func (n *MeshNode) nodeWorker() {
 		}
 	}
 
-	// Some time to bootstrap and connect to everyone
 	pullDiscovery := time.NewTicker(time.Second * 2)
 	rttUpdate := time.NewTicker(time.Second * 2)
 	connector := time.NewTicker(time.Second * 2)
@@ -400,15 +401,11 @@ func (n *MeshNode) nodeWorker() {
 				return
 			default:
 			}
-			for _, peer := range n.peerStore.ListConnected() {
-				rtt := peer.Peer.conn.ConnectionStats().SmoothedRTT.Microseconds()
-				pi, ex := n.peerStore.Get(peer.Id)
-				if !ex {
-					// Should not reach here
-					continue
+			/*
+				for _, peer := range n.peerStore.ListConnected() {
+					rtt := peer.Peer.conn.ConnectionStats().SmoothedRTT.Microseconds()
 				}
-				pi.RTTMap[n.nodeId] = rtt
-			}
+			*/
 		}
 	}()
 
@@ -469,7 +466,7 @@ func (n *MeshNode) nodeWorker() {
 		rttUpdate.Stop()
 	}
 }
-func (n *MeshNode) PeerStore() *PeerStore {
+func (n *MeshNode) PeerStore() *components.PeerStore {
 	return n.peerStore
 }
 

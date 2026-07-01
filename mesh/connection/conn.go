@@ -1,18 +1,16 @@
-package mesh
+package connection
 
 import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"liberator-node-go/mesh/meshproto"
 	"net"
 	"sync/atomic"
 
 	"github.com/quic-go/quic-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type MeshConnection struct {
@@ -24,12 +22,11 @@ type MeshConnection struct {
 	nodeId string
 
 	defaultClient *grpc.ClientConn
-	meshService   meshproto.MeshServiceClient
 
 	closeFunc func(c *MeshConnection)
 }
 
-func newConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, closeFunc func(c *MeshConnection)) (*MeshConnection, error) {
+func NewMeshConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, closeFunc func(c *MeshConnection)) (*MeshConnection, error) {
 	state := conn.ConnectionState().TLS
 	if len(state.PeerCertificates) == 0 {
 		return nil, fmt.Errorf("peer is not authenticated")
@@ -53,7 +50,7 @@ func newConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, closeFunc
 	if err != nil {
 		return nil, err
 	}
-	c.meshService = meshproto.NewMeshServiceClient(c.defaultClient)
+	//c.meshService = meshproto.NewMeshServiceClient(c.defaultClient)
 
 	return c, nil
 }
@@ -101,7 +98,7 @@ func (c *MeshConnection) acceptBiStreams(ctx context.Context) {
 		c.eventSink <- &ConnectionEvent{
 			Type:        EventType_NewBiStreamConnection,
 			Connection:  c,
-			NewBiStream: newBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()),
+			NewBiStream: NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()),
 		}
 	}
 }
@@ -114,7 +111,7 @@ func (c *MeshConnection) NewGrpcClient() (*grpc.ClientConn, error) {
 			return nil, err
 		}
 		// Заворачиваем quic.Stream в net.Conn (структура streamConn из прошлого ответа)
-		return newBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()), nil
+		return NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()), nil
 	}
 
 	// Устанавливаем виртуальное gRPC соединение
@@ -128,8 +125,4 @@ func (c *MeshConnection) NewGrpcClient() (*grpc.ClientConn, error) {
 	}
 
 	return grpcConn, nil
-}
-
-func (c *MeshConnection) ListKnownPeers(ctx context.Context) (*meshproto.ListKnownPeersResponse, error) {
-	return c.meshService.ListKnownPeers(ctx, &emptypb.Empty{})
 }

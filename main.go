@@ -50,7 +50,7 @@ func main() {
 
 	nodes := []*mesh.MeshNode{createNode(ctx, rootCert, priv_key, nil)}
 
-	for range 4 {
+	for range 200 {
 		randomNode := mrand.Int31n(min(int32(3), int32(len(nodes))))
 
 		node := createNode(ctx, rootCert, priv_key, []string{nodes[randomNode].Addr().String()})

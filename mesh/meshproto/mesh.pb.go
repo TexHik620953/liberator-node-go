@@ -24,20 +24,19 @@ const (
 
 type IpInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Country       string                 `protobuf:"bytes,2,opt,name=country,proto3" json:"country,omitempty"`
-	CountryCode   string                 `protobuf:"bytes,3,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
-	Region        string                 `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
-	RegionName    string                 `protobuf:"bytes,5,opt,name=region_name,json=regionName,proto3" json:"region_name,omitempty"`
-	City          string                 `protobuf:"bytes,6,opt,name=city,proto3" json:"city,omitempty"`
-	Zip           string                 `protobuf:"bytes,7,opt,name=zip,proto3" json:"zip,omitempty"`
-	Lat           float64                `protobuf:"fixed64,8,opt,name=lat,proto3" json:"lat,omitempty"`
-	Lon           float64                `protobuf:"fixed64,9,opt,name=lon,proto3" json:"lon,omitempty"`
-	Timezone      string                 `protobuf:"bytes,10,opt,name=timezone,proto3" json:"timezone,omitempty"`
-	Isp           string                 `protobuf:"bytes,11,opt,name=isp,proto3" json:"isp,omitempty"`
-	Org           string                 `protobuf:"bytes,12,opt,name=org,proto3" json:"org,omitempty"`
-	As            string                 `protobuf:"bytes,13,opt,name=as,proto3" json:"as,omitempty"`
-	Query         string                 `protobuf:"bytes,14,opt,name=query,proto3" json:"query,omitempty"`
+	Country       string                 `protobuf:"bytes,1,opt,name=country,proto3" json:"country,omitempty"`
+	CountryCode   string                 `protobuf:"bytes,2,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
+	Region        string                 `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`
+	RegionName    string                 `protobuf:"bytes,4,opt,name=region_name,json=regionName,proto3" json:"region_name,omitempty"`
+	City          string                 `protobuf:"bytes,5,opt,name=city,proto3" json:"city,omitempty"`
+	Zip           string                 `protobuf:"bytes,6,opt,name=zip,proto3" json:"zip,omitempty"`
+	Lat           float64                `protobuf:"fixed64,7,opt,name=lat,proto3" json:"lat,omitempty"`
+	Lon           float64                `protobuf:"fixed64,8,opt,name=lon,proto3" json:"lon,omitempty"`
+	Timezone      string                 `protobuf:"bytes,9,opt,name=timezone,proto3" json:"timezone,omitempty"`
+	Isp           string                 `protobuf:"bytes,10,opt,name=isp,proto3" json:"isp,omitempty"`
+	Org           string                 `protobuf:"bytes,11,opt,name=org,proto3" json:"org,omitempty"`
+	As            string                 `protobuf:"bytes,12,opt,name=as,proto3" json:"as,omitempty"`
+	Query         string                 `protobuf:"bytes,13,opt,name=query,proto3" json:"query,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -70,13 +69,6 @@ func (x *IpInfo) ProtoReflect() protoreflect.Message {
 // Deprecated: Use IpInfo.ProtoReflect.Descriptor instead.
 func (*IpInfo) Descriptor() ([]byte, []int) {
 	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *IpInfo) GetStatus() string {
-	if x != nil {
-		return x.Status
-	}
-	return ""
 }
 
 func (x *IpInfo) GetCountry() string {
@@ -173,10 +165,9 @@ func (x *IpInfo) GetQuery() string {
 type PeerInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Addr          string                 `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
+	Addr          map[string]bool        `protobuf:"bytes,2,rep,name=addr,proto3" json:"addr,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	LastSeen      int64                  `protobuf:"varint,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
 	IpInfo        *IpInfo                `protobuf:"bytes,4,opt,name=ip_info,json=ipInfo,proto3,oneof" json:"ip_info,omitempty"`
-	Rtt           int64                  `protobuf:"varint,5,opt,name=rtt,proto3" json:"rtt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -218,11 +209,11 @@ func (x *PeerInfo) GetId() string {
 	return ""
 }
 
-func (x *PeerInfo) GetAddr() string {
+func (x *PeerInfo) GetAddr() map[string]bool {
 	if x != nil {
 		return x.Addr
 	}
-	return ""
+	return nil
 }
 
 func (x *PeerInfo) GetLastSeen() int64 {
@@ -237,13 +228,6 @@ func (x *PeerInfo) GetIpInfo() *IpInfo {
 		return x.IpInfo
 	}
 	return nil
-}
-
-func (x *PeerInfo) GetRtt() int64 {
-	if x != nil {
-		return x.Rtt
-	}
-	return 0
 }
 
 type ListKnownPeersResponse struct {
@@ -290,39 +274,138 @@ func (x *ListKnownPeersResponse) GetPeers() []*PeerInfo {
 	return nil
 }
 
+type RttMap struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RttMap        map[string]int64       `protobuf:"bytes,1,rep,name=rttMap,proto3" json:"rttMap,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RttMap) Reset() {
+	*x = RttMap{}
+	mi := &file_mesh_meshproto_mesh_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RttMap) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RttMap) ProtoMessage() {}
+
+func (x *RttMap) ProtoReflect() protoreflect.Message {
+	mi := &file_mesh_meshproto_mesh_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RttMap.ProtoReflect.Descriptor instead.
+func (*RttMap) Descriptor() ([]byte, []int) {
+	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RttMap) GetRttMap() map[string]int64 {
+	if x != nil {
+		return x.RttMap
+	}
+	return nil
+}
+
+type RttUpdateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RttMap        map[string]*RttMap     `protobuf:"bytes,1,rep,name=rttMap,proto3" json:"rttMap,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RttUpdateRequest) Reset() {
+	*x = RttUpdateRequest{}
+	mi := &file_mesh_meshproto_mesh_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RttUpdateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RttUpdateRequest) ProtoMessage() {}
+
+func (x *RttUpdateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_mesh_meshproto_mesh_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RttUpdateRequest.ProtoReflect.Descriptor instead.
+func (*RttUpdateRequest) Descriptor() ([]byte, []int) {
+	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RttUpdateRequest) GetRttMap() map[string]*RttMap {
+	if x != nil {
+		return x.RttMap
+	}
+	return nil
+}
+
 var File_mesh_meshproto_mesh_proto protoreflect.FileDescriptor
 
 const file_mesh_meshproto_mesh_proto_rawDesc = "" +
 	"\n" +
-	"\x19mesh/meshproto/mesh.proto\x12\tmeshproto\x1a\x1bgoogle/protobuf/empty.proto\"\xc6\x02\n" +
-	"\x06IpInfo\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
-	"\acountry\x18\x02 \x01(\tR\acountry\x12!\n" +
-	"\fcountry_code\x18\x03 \x01(\tR\vcountryCode\x12\x16\n" +
-	"\x06region\x18\x04 \x01(\tR\x06region\x12\x1f\n" +
-	"\vregion_name\x18\x05 \x01(\tR\n" +
+	"\x19mesh/meshproto/mesh.proto\x12\tmeshproto\x1a\x1bgoogle/protobuf/empty.proto\"\xae\x02\n" +
+	"\x06IpInfo\x12\x18\n" +
+	"\acountry\x18\x01 \x01(\tR\acountry\x12!\n" +
+	"\fcountry_code\x18\x02 \x01(\tR\vcountryCode\x12\x16\n" +
+	"\x06region\x18\x03 \x01(\tR\x06region\x12\x1f\n" +
+	"\vregion_name\x18\x04 \x01(\tR\n" +
 	"regionName\x12\x12\n" +
-	"\x04city\x18\x06 \x01(\tR\x04city\x12\x10\n" +
-	"\x03zip\x18\a \x01(\tR\x03zip\x12\x10\n" +
-	"\x03lat\x18\b \x01(\x01R\x03lat\x12\x10\n" +
-	"\x03lon\x18\t \x01(\x01R\x03lon\x12\x1a\n" +
-	"\btimezone\x18\n" +
-	" \x01(\tR\btimezone\x12\x10\n" +
-	"\x03isp\x18\v \x01(\tR\x03isp\x12\x10\n" +
-	"\x03org\x18\f \x01(\tR\x03org\x12\x0e\n" +
-	"\x02as\x18\r \x01(\tR\x02as\x12\x14\n" +
-	"\x05query\x18\x0e \x01(\tR\x05query\"\x9a\x01\n" +
+	"\x04city\x18\x05 \x01(\tR\x04city\x12\x10\n" +
+	"\x03zip\x18\x06 \x01(\tR\x03zip\x12\x10\n" +
+	"\x03lat\x18\a \x01(\x01R\x03lat\x12\x10\n" +
+	"\x03lon\x18\b \x01(\x01R\x03lon\x12\x1a\n" +
+	"\btimezone\x18\t \x01(\tR\btimezone\x12\x10\n" +
+	"\x03isp\x18\n" +
+	" \x01(\tR\x03isp\x12\x10\n" +
+	"\x03org\x18\v \x01(\tR\x03org\x12\x0e\n" +
+	"\x02as\x18\f \x01(\tR\x02as\x12\x14\n" +
+	"\x05query\x18\r \x01(\tR\x05query\"\xe0\x01\n" +
 	"\bPeerInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04addr\x18\x02 \x01(\tR\x04addr\x12\x1b\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x121\n" +
+	"\x04addr\x18\x02 \x03(\v2\x1d.meshproto.PeerInfo.AddrEntryR\x04addr\x12\x1b\n" +
 	"\tlast_seen\x18\x03 \x01(\x03R\blastSeen\x12/\n" +
-	"\aip_info\x18\x04 \x01(\v2\x11.meshproto.IpInfoH\x00R\x06ipInfo\x88\x01\x01\x12\x10\n" +
-	"\x03rtt\x18\x05 \x01(\x03R\x03rttB\n" +
+	"\aip_info\x18\x04 \x01(\v2\x11.meshproto.IpInfoH\x00R\x06ipInfo\x88\x01\x01\x1a7\n" +
+	"\tAddrEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\bR\x05value:\x028\x01B\n" +
 	"\n" +
 	"\b_ip_info\"C\n" +
 	"\x16ListKnownPeersResponse\x12)\n" +
-	"\x05peers\x18\x01 \x03(\v2\x13.meshproto.PeerInfoR\x05peers2Z\n" +
-	"\vMeshService\x12K\n" +
+	"\x05peers\x18\x01 \x03(\v2\x13.meshproto.PeerInfoR\x05peers\"z\n" +
+	"\x06RttMap\x125\n" +
+	"\x06rttMap\x18\x01 \x03(\v2\x1d.meshproto.RttMap.RttMapEntryR\x06rttMap\x1a9\n" +
+	"\vRttMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\"\xa1\x01\n" +
+	"\x10RttUpdateRequest\x12?\n" +
+	"\x06rttMap\x18\x01 \x03(\v2'.meshproto.RttUpdateRequest.RttMapEntryR\x06rttMap\x1aL\n" +
+	"\vRttMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12'\n" +
+	"\x05value\x18\x02 \x01(\v2\x11.meshproto.RttMapR\x05value:\x028\x012_\n" +
+	"\x10DiscoveryService\x12K\n" +
 	"\x0eListKnownPeers\x12\x16.google.protobuf.Empty\x1a!.meshproto.ListKnownPeersResponseB\rZ\v./meshprotob\x06proto3"
 
 var (
@@ -337,23 +420,32 @@ func file_mesh_meshproto_mesh_proto_rawDescGZIP() []byte {
 	return file_mesh_meshproto_mesh_proto_rawDescData
 }
 
-var file_mesh_meshproto_mesh_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_mesh_meshproto_mesh_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_mesh_meshproto_mesh_proto_goTypes = []any{
 	(*IpInfo)(nil),                 // 0: meshproto.IpInfo
 	(*PeerInfo)(nil),               // 1: meshproto.PeerInfo
 	(*ListKnownPeersResponse)(nil), // 2: meshproto.ListKnownPeersResponse
-	(*emptypb.Empty)(nil),          // 3: google.protobuf.Empty
+	(*RttMap)(nil),                 // 3: meshproto.RttMap
+	(*RttUpdateRequest)(nil),       // 4: meshproto.RttUpdateRequest
+	nil,                            // 5: meshproto.PeerInfo.AddrEntry
+	nil,                            // 6: meshproto.RttMap.RttMapEntry
+	nil,                            // 7: meshproto.RttUpdateRequest.RttMapEntry
+	(*emptypb.Empty)(nil),          // 8: google.protobuf.Empty
 }
 var file_mesh_meshproto_mesh_proto_depIdxs = []int32{
-	0, // 0: meshproto.PeerInfo.ip_info:type_name -> meshproto.IpInfo
-	1, // 1: meshproto.ListKnownPeersResponse.peers:type_name -> meshproto.PeerInfo
-	3, // 2: meshproto.MeshService.ListKnownPeers:input_type -> google.protobuf.Empty
-	2, // 3: meshproto.MeshService.ListKnownPeers:output_type -> meshproto.ListKnownPeersResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 0: meshproto.PeerInfo.addr:type_name -> meshproto.PeerInfo.AddrEntry
+	0, // 1: meshproto.PeerInfo.ip_info:type_name -> meshproto.IpInfo
+	1, // 2: meshproto.ListKnownPeersResponse.peers:type_name -> meshproto.PeerInfo
+	6, // 3: meshproto.RttMap.rttMap:type_name -> meshproto.RttMap.RttMapEntry
+	7, // 4: meshproto.RttUpdateRequest.rttMap:type_name -> meshproto.RttUpdateRequest.RttMapEntry
+	3, // 5: meshproto.RttUpdateRequest.RttMapEntry.value:type_name -> meshproto.RttMap
+	8, // 6: meshproto.DiscoveryService.ListKnownPeers:input_type -> google.protobuf.Empty
+	2, // 7: meshproto.DiscoveryService.ListKnownPeers:output_type -> meshproto.ListKnownPeersResponse
+	7, // [7:8] is the sub-list for method output_type
+	6, // [6:7] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_mesh_meshproto_mesh_proto_init() }
@@ -368,7 +460,7 @@ func file_mesh_meshproto_mesh_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mesh_meshproto_mesh_proto_rawDesc), len(file_mesh_meshproto_mesh_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

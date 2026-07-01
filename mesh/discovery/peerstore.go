@@ -1,7 +1,9 @@
-package mesh
+package discovery
 
 import (
 	"liberator-node-go/infra/ipapi"
+	"liberator-node-go/mesh/connection"
+	"net"
 	"sync"
 	"time"
 )
@@ -10,14 +12,12 @@ type PeerInfo struct {
 	Id        string
 	Connected bool
 	LastSeen  time.Time
+	IpInfo    *ipapi.IpInfo
 
-	IpInfo *ipapi.IpInfo
+	Peer *connection.MeshConnection
 
-	Peer *MeshConnection
-
-	// From->rtt
-	RTTMap   map[string]int64
-	Adresses map[string]struct{}
+	Addr      map[string]bool
+	addrsLock sync.Mutex
 }
 
 type PeerStore struct {
@@ -25,7 +25,7 @@ type PeerStore struct {
 	mut   sync.RWMutex
 }
 
-func newPeerStore() *PeerStore {
+func NewPeerStore() *PeerStore {
 	return &PeerStore{
 		store: make(map[string]*PeerInfo),
 	}
@@ -105,4 +105,35 @@ func (ps *PeerStore) Set(info *PeerInfo) {
 	defer ps.mut.Unlock()
 
 	ps.store[info.Id] = info
+}
+
+func (ps *PeerStore) InsertMerge(update *PeerInfo) {
+	pi, ex := ps.Get(update.Id)
+	if !ex {
+		ps.Set(pi)
+		return
+	}
+
+	// Merge addresses map
+	pi.addrsLock.Lock()
+	update.addrsLock.Lock()
+	for a, _ := range update.Addr {
+		if len(a) == 0 {
+			continue
+		}
+		if _, err := net.ResolveUDPAddr("udp", a); err != nil {
+			continue
+		}
+		pi.Addr[a] = true
+	}
+	update.addrsLock.Unlock()
+	pi.addrsLock.Unlock()
+
+	if update.LastSeen.After(pi.LastSeen) {
+		pi.LastSeen = update.LastSeen
+	}
+
+	if update.IpInfo != nil {
+		pi.IpInfo = update.IpInfo
+	}
 }

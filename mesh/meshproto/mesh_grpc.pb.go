@@ -20,101 +20,103 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MeshService_ListKnownPeers_FullMethodName = "/meshproto.MeshService/ListKnownPeers"
+	DiscoveryService_ListKnownPeers_FullMethodName = "/meshproto.DiscoveryService/ListKnownPeers"
 )
 
-// MeshServiceClient is the client API for MeshService service.
+// DiscoveryServiceClient is the client API for DiscoveryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type MeshServiceClient interface {
+type DiscoveryServiceClient interface {
+	// List all peers known by node.
 	ListKnownPeers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListKnownPeersResponse, error)
 }
 
-type meshServiceClient struct {
+type discoveryServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewMeshServiceClient(cc grpc.ClientConnInterface) MeshServiceClient {
-	return &meshServiceClient{cc}
+func NewDiscoveryServiceClient(cc grpc.ClientConnInterface) DiscoveryServiceClient {
+	return &discoveryServiceClient{cc}
 }
 
-func (c *meshServiceClient) ListKnownPeers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListKnownPeersResponse, error) {
+func (c *discoveryServiceClient) ListKnownPeers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListKnownPeersResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListKnownPeersResponse)
-	err := c.cc.Invoke(ctx, MeshService_ListKnownPeers_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, DiscoveryService_ListKnownPeers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// MeshServiceServer is the server API for MeshService service.
-// All implementations must embed UnimplementedMeshServiceServer
+// DiscoveryServiceServer is the server API for DiscoveryService service.
+// All implementations must embed UnimplementedDiscoveryServiceServer
 // for forward compatibility.
-type MeshServiceServer interface {
+type DiscoveryServiceServer interface {
+	// List all peers known by node.
 	ListKnownPeers(context.Context, *emptypb.Empty) (*ListKnownPeersResponse, error)
-	mustEmbedUnimplementedMeshServiceServer()
+	mustEmbedUnimplementedDiscoveryServiceServer()
 }
 
-// UnimplementedMeshServiceServer must be embedded to have
+// UnimplementedDiscoveryServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedMeshServiceServer struct{}
+type UnimplementedDiscoveryServiceServer struct{}
 
-func (UnimplementedMeshServiceServer) ListKnownPeers(context.Context, *emptypb.Empty) (*ListKnownPeersResponse, error) {
+func (UnimplementedDiscoveryServiceServer) ListKnownPeers(context.Context, *emptypb.Empty) (*ListKnownPeersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListKnownPeers not implemented")
 }
-func (UnimplementedMeshServiceServer) mustEmbedUnimplementedMeshServiceServer() {}
-func (UnimplementedMeshServiceServer) testEmbeddedByValue()                     {}
+func (UnimplementedDiscoveryServiceServer) mustEmbedUnimplementedDiscoveryServiceServer() {}
+func (UnimplementedDiscoveryServiceServer) testEmbeddedByValue()                          {}
 
-// UnsafeMeshServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to MeshServiceServer will
+// UnsafeDiscoveryServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DiscoveryServiceServer will
 // result in compilation errors.
-type UnsafeMeshServiceServer interface {
-	mustEmbedUnimplementedMeshServiceServer()
+type UnsafeDiscoveryServiceServer interface {
+	mustEmbedUnimplementedDiscoveryServiceServer()
 }
 
-func RegisterMeshServiceServer(s grpc.ServiceRegistrar, srv MeshServiceServer) {
-	// If the following call panics, it indicates UnimplementedMeshServiceServer was
+func RegisterDiscoveryServiceServer(s grpc.ServiceRegistrar, srv DiscoveryServiceServer) {
+	// If the following call panics, it indicates UnimplementedDiscoveryServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&MeshService_ServiceDesc, srv)
+	s.RegisterService(&DiscoveryService_ServiceDesc, srv)
 }
 
-func _MeshService_ListKnownPeers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DiscoveryService_ListKnownPeers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MeshServiceServer).ListKnownPeers(ctx, in)
+		return srv.(DiscoveryServiceServer).ListKnownPeers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MeshService_ListKnownPeers_FullMethodName,
+		FullMethod: DiscoveryService_ListKnownPeers_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MeshServiceServer).ListKnownPeers(ctx, req.(*emptypb.Empty))
+		return srv.(DiscoveryServiceServer).ListKnownPeers(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// MeshService_ServiceDesc is the grpc.ServiceDesc for MeshService service.
+// DiscoveryService_ServiceDesc is the grpc.ServiceDesc for DiscoveryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var MeshService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "meshproto.MeshService",
-	HandlerType: (*MeshServiceServer)(nil),
+var DiscoveryService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "meshproto.DiscoveryService",
+	HandlerType: (*DiscoveryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ListKnownPeers",
-			Handler:    _MeshService_ListKnownPeers_Handler,
+			Handler:    _DiscoveryService_ListKnownPeers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

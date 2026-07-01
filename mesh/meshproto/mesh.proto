@@ -24,11 +24,9 @@ message IpInfo {
 
 message PeerInfo {
     string id = 1;
-    string addr = 2;
-
+    map<string,bool> addr = 2;
     int64 last_seen = 3;
     optional IpInfo ip_info = 4;
-    int64 rtt = 5;
 };
 message ListKnownPeersResponse {
   repeated PeerInfo peers = 1;
@@ -43,8 +41,10 @@ message RttUpdateRequest {
 };
 
 
-service MeshService {
+service DiscoveryService {
+    // List all peers known by node.
     rpc ListKnownPeers(google.protobuf.Empty) returns(ListKnownPeersResponse);
-    rpc NotifyRTT(RttUpdateRequest) returns(google.protobuf.Empty);
+    
+    //rpc NotifyRTT(RttUpdateRequest) returns(google.protobuf.Empty);
 }
 

@@ -1,4 +1,4 @@
-package mesh
+package connection
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type BiStreamConnAdapter struct {
 	remoteAddr net.Addr
 }
 
-func newBiStreamConn(stream *quic.Stream, localAddr, remoteAddr net.Addr) net.Conn {
+func NewBiStreamConn(stream *quic.Stream, localAddr, remoteAddr net.Addr) net.Conn {
 	return &BiStreamConnAdapter{
 		conn:       stream,
 		localAddr:  localAddr,
@@ -75,7 +75,7 @@ type BiStreamLis struct {
 	closeOnce  sync.Once
 }
 
-func newBiStreamLis(ctx context.Context, localAddr net.Addr) *BiStreamLis {
+func NewBiStreamLis(ctx context.Context, localAddr net.Addr) *BiStreamLis {
 	ctx, cancel := context.WithCancel(ctx)
 	return &BiStreamLis{
 		ctx:        ctx,
