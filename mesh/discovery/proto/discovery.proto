@@ -1,10 +1,10 @@
 syntax = "proto3";
-package meshproto;
-option go_package = "./meshproto";
+package proto;
+option go_package = "./proto";
 
 import "google/protobuf/empty.proto";
 
-//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative mesh/meshproto/mesh.proto
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative mesh/discovery/proto/discovery.proto
 
 message IpInfo {
     string country = 1;
@@ -43,7 +43,7 @@ message RttUpdateRequest {
 
 service DiscoveryService {
     // List all peers known by node.
-    rpc ListKnownPeers(google.protobuf.Empty) returns(ListKnownPeersResponse);
+    rpc PullKnownPeers(google.protobuf.Empty) returns(ListKnownPeersResponse);
     
     //rpc NotifyRTT(RttUpdateRequest) returns(google.protobuf.Empty);
 }

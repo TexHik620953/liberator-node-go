@@ -2,132 +2,70 @@ package discovery
 
 import (
 	"liberator-node-go/infra/ipapi"
-	"liberator-node-go/mesh/connection"
+	"liberator-node-go/utils/safemap"
 	"net"
-	"sync"
 	"time"
 )
 
 type PeerInfo struct {
-	Id        string
-	Connected bool
-	LastSeen  time.Time
-	IpInfo    *ipapi.IpInfo
+	Id       string
+	LastSeen time.Time
+	IpInfo   *ipapi.IpInfo
 
-	Peer *connection.MeshConnection
-
-	Addr      map[string]bool
-	addrsLock sync.Mutex
+	Addresses safemap.Safemap[string, bool]
 }
 
 type PeerStore struct {
-	store map[string]*PeerInfo
-	mut   sync.RWMutex
+	store safemap.Safemap[string, *PeerInfo]
 }
 
 func NewPeerStore() *PeerStore {
 	return &PeerStore{
-		store: make(map[string]*PeerInfo),
+		store: safemap.New[string, *PeerInfo](),
 	}
 }
 
 func (ps *PeerStore) List() []*PeerInfo {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
+	r := make([]*PeerInfo, 0)
 
-	r := make([]*PeerInfo, 0, len(ps.store))
-	for _, v := range ps.store {
-		r = append(r, v)
-	}
+	ps.store.Foreach(func(s string, pi *PeerInfo) {
+		r = append(r, pi)
+	})
+
 	return r
 }
-func (ps *PeerStore) ListConnected() []*PeerInfo {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-
-	r := make([]*PeerInfo, 0, len(ps.store))
-	for _, v := range ps.store {
-		if !v.Connected {
-			continue
-		}
-		r = append(r, v)
-	}
-	return r
+func (svc *PeerStore) Count() int {
+	return svc.store.Count()
 }
-func (ps *PeerStore) ListUnconnected() []*PeerInfo {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-
-	r := make([]*PeerInfo, 0, len(ps.store))
-	for _, v := range ps.store {
-		if v.Connected {
-			continue
-		}
-		r = append(r, v)
-	}
-	return r
-}
-
 func (ps *PeerStore) Exists(key string) bool {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-
-	_, ex := ps.store[key]
-	return ex
+	return ps.store.Exists(key)
 }
 
 func (ps *PeerStore) Get(key string) (*PeerInfo, bool) {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-
-	v, ex := ps.store[key]
-	if !ex {
-		return nil, false
-	}
-	return v, true
-}
-func (ps *PeerStore) GetConnected(key string) (*PeerInfo, bool) {
-	ps.mut.RLock()
-	defer ps.mut.RUnlock()
-
-	v, ex := ps.store[key]
-	if !ex {
-		return nil, false
-	}
-	if !v.Connected {
-		return nil, false
-	}
-	return v, true
+	return ps.store.Get(key)
 }
 
 func (ps *PeerStore) Set(info *PeerInfo) {
-	ps.mut.Lock()
-	defer ps.mut.Unlock()
-
-	ps.store[info.Id] = info
+	ps.store.Set(info.Id, info)
 }
 
 func (ps *PeerStore) InsertMerge(update *PeerInfo) {
 	pi, ex := ps.Get(update.Id)
 	if !ex {
-		ps.Set(pi)
+		ps.Set(update)
 		return
 	}
 
 	// Merge addresses map
-	pi.addrsLock.Lock()
-	update.addrsLock.Lock()
-	for a, _ := range update.Addr {
+	update.Addresses.Foreach(func(a string, _ bool) {
 		if len(a) == 0 {
-			continue
+			return
 		}
 		if _, err := net.ResolveUDPAddr("udp", a); err != nil {
-			continue
+			return
 		}
-		pi.Addr[a] = true
-	}
-	update.addrsLock.Unlock()
-	pi.addrsLock.Unlock()
+		pi.Addresses.Set(a, true)
+	})
 
 	if update.LastSeen.After(pi.LastSeen) {
 		pi.LastSeen = update.LastSeen

@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
+	"liberator-node-go/ingress"
 	"liberator-node-go/mesh"
 	"math/big"
 	mrand "math/rand"
@@ -50,7 +51,7 @@ func main() {
 
 	nodes := []*mesh.MeshNode{createNode(ctx, rootCert, priv_key, nil)}
 
-	for range 200 {
+	for range 3 {
 		randomNode := mrand.Int31n(min(int32(3), int32(len(nodes))))
 
 		node := createNode(ctx, rootCert, priv_key, []string{nodes[randomNode].Addr().String()})
@@ -61,20 +62,30 @@ func main() {
 		go node.Run()
 	}
 
-	peerStores := []*mesh.PeerStore{}
-
-	for _, node := range nodes {
-		peerStores = append(peerStores, node.PeerStore())
+	// Start ingress
+	_, igPriv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		panic(err)
 	}
+	ingressCert, err := IssueNodeCertificate(igPriv, "ingress", rootCert, priv_key)
+	if err != nil {
+		panic(err)
+	}
+	ig, err := ingress.New(ctx, ":2100", []byte("sraka"), ingressCert)
+	if err != nil {
+		panic(err)
+	}
+	go ig.Run()
 
 	for {
-		<-time.After(time.Second)
+		<-time.After(time.Second * 10)
 		s := make([]int, 0)
+		c := make([]int, 0)
 		for _, node := range nodes {
-			kp1, _ := node.ListKnownPeers(ctx, nil)
-			s = append(s, len(kp1.Peers))
+			s = append(s, node.PeerStore().Count())
+			c = append(c, node.ConnectionsCount())
 		}
-		fmt.Println("nodes connectivity: ", s)
+		fmt.Println("nodes peers: ", s, "conn: ", c)
 	}
 	select {}
 }

@@ -1,10 +1,11 @@
-package connection
+package mesh
 
 import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"liberator-node-go/utils/quictransport"
 	"net"
 	"sync/atomic"
 
@@ -13,20 +14,26 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type MeshConnection struct {
-	conn      *quic.Conn
-	eventSink chan<- *ConnectionEvent
+type WrappedConnection interface {
+	ID() string
+	RemoteAddr() net.Addr
+	Close()
+	Run()
+	GrpcClient() *grpc.ClientConn
+}
+type wrappedConnectionImpl struct {
+	nodeId string
+	conn   *quic.Conn
 
 	isRunning uint32
 
-	nodeId string
+	grpcLis    *quictransport.BiStreamLis
+	grpcClient *grpc.ClientConn
 
-	defaultClient *grpc.ClientConn
-
-	closeFunc func(c *MeshConnection)
+	closeFunc func(c WrappedConnection)
 }
 
-func NewMeshConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, closeFunc func(c *MeshConnection)) (*MeshConnection, error) {
+func wrapConnection(conn *quic.Conn, grpcLis *quictransport.BiStreamLis, closeFunc func(c WrappedConnection)) (WrappedConnection, error) {
 	state := conn.ConnectionState().TLS
 	if len(state.PeerCertificates) == 0 {
 		return nil, fmt.Errorf("peer is not authenticated")
@@ -39,14 +46,14 @@ func NewMeshConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, close
 	hash := sha256.Sum256(peerCert.RawSubjectPublicKeyInfo)
 	nodeId := hex.EncodeToString(hash[:])
 
-	c := &MeshConnection{
+	c := &wrappedConnectionImpl{
 		nodeId:    nodeId,
 		conn:      conn,
-		eventSink: eventSink,
 		closeFunc: closeFunc,
+		grpcLis:   grpcLis,
 	}
 	var err error
-	c.defaultClient, err = c.NewGrpcClient()
+	c.grpcClient, err = c.newGrpcClient()
 	if err != nil {
 		return nil, err
 	}
@@ -55,18 +62,18 @@ func NewMeshConnection(conn *quic.Conn, eventSink chan<- *ConnectionEvent, close
 	return c, nil
 }
 
-func (c *MeshConnection) ID() string {
+func (c *wrappedConnectionImpl) ID() string {
 	return c.nodeId
 }
-func (c *MeshConnection) RemoteAddr() net.Addr {
+func (c *wrappedConnectionImpl) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
 
-func (c *MeshConnection) Close() {
+func (c *wrappedConnectionImpl) Close() {
 	_ = c.conn.CloseWithError(quic.ApplicationErrorCode(quic.NoError), "closed")
 }
 
-func (c *MeshConnection) Run() {
+func (c *wrappedConnectionImpl) Run() {
 	if !atomic.CompareAndSwapUint32(&c.isRunning, 0, 1) {
 		return
 	}
@@ -79,7 +86,7 @@ func (c *MeshConnection) Run() {
 	c.closeFunc(c)
 }
 
-func (c *MeshConnection) readDatagrams(ctx context.Context) {
+func (c *wrappedConnectionImpl) readDatagrams(ctx context.Context) {
 	for {
 		data, err := c.conn.ReceiveDatagram(ctx)
 		if err != nil {
@@ -89,21 +96,23 @@ func (c *MeshConnection) readDatagrams(ctx context.Context) {
 	}
 }
 
-func (c *MeshConnection) acceptBiStreams(ctx context.Context) {
+func (c *wrappedConnectionImpl) acceptBiStreams(ctx context.Context) {
 	for {
 		stream, err := c.conn.AcceptStream(ctx)
 		if err != nil {
 			return
 		}
-		c.eventSink <- &ConnectionEvent{
-			Type:        EventType_NewBiStreamConnection,
-			Connection:  c,
-			NewBiStream: NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()),
-		}
+
+		netConn := quictransport.NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr())
+		c.grpcLis.PushConnection(netConn)
 	}
 }
 
-func (c *MeshConnection) NewGrpcClient() (*grpc.ClientConn, error) {
+func (c *wrappedConnectionImpl) GrpcClient() *grpc.ClientConn {
+	return c.grpcClient
+}
+
+func (c *wrappedConnectionImpl) newGrpcClient() (*grpc.ClientConn, error) {
 	// Настраиваем кастомный диалер для gRPC
 	dialer := func(ctx context.Context, addr string) (net.Conn, error) {
 		stream, err := c.conn.OpenStreamSync(ctx)
@@ -111,7 +120,7 @@ func (c *MeshConnection) NewGrpcClient() (*grpc.ClientConn, error) {
 			return nil, err
 		}
 		// Заворачиваем quic.Stream в net.Conn (структура streamConn из прошлого ответа)
-		return NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()), nil
+		return quictransport.NewBiStreamConn(stream, c.conn.LocalAddr(), c.conn.RemoteAddr()), nil
 	}
 
 	// Устанавливаем виртуальное gRPC соединение

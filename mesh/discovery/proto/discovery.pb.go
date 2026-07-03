@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: mesh/meshproto/mesh.proto
+// source: mesh/discovery/proto/discovery.proto
 
-package meshproto
+package proto
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -43,7 +43,7 @@ type IpInfo struct {
 
 func (x *IpInfo) Reset() {
 	*x = IpInfo{}
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[0]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -55,7 +55,7 @@ func (x *IpInfo) String() string {
 func (*IpInfo) ProtoMessage() {}
 
 func (x *IpInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[0]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -68,7 +68,7 @@ func (x *IpInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IpInfo.ProtoReflect.Descriptor instead.
 func (*IpInfo) Descriptor() ([]byte, []int) {
-	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{0}
+	return file_mesh_discovery_proto_discovery_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *IpInfo) GetCountry() string {
@@ -174,7 +174,7 @@ type PeerInfo struct {
 
 func (x *PeerInfo) Reset() {
 	*x = PeerInfo{}
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[1]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -186,7 +186,7 @@ func (x *PeerInfo) String() string {
 func (*PeerInfo) ProtoMessage() {}
 
 func (x *PeerInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[1]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -199,7 +199,7 @@ func (x *PeerInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerInfo.ProtoReflect.Descriptor instead.
 func (*PeerInfo) Descriptor() ([]byte, []int) {
-	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{1}
+	return file_mesh_discovery_proto_discovery_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PeerInfo) GetId() string {
@@ -239,7 +239,7 @@ type ListKnownPeersResponse struct {
 
 func (x *ListKnownPeersResponse) Reset() {
 	*x = ListKnownPeersResponse{}
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[2]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -251,7 +251,7 @@ func (x *ListKnownPeersResponse) String() string {
 func (*ListKnownPeersResponse) ProtoMessage() {}
 
 func (x *ListKnownPeersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[2]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +264,7 @@ func (x *ListKnownPeersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListKnownPeersResponse.ProtoReflect.Descriptor instead.
 func (*ListKnownPeersResponse) Descriptor() ([]byte, []int) {
-	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{2}
+	return file_mesh_discovery_proto_discovery_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListKnownPeersResponse) GetPeers() []*PeerInfo {
@@ -283,7 +283,7 @@ type RttMap struct {
 
 func (x *RttMap) Reset() {
 	*x = RttMap{}
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[3]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -295,7 +295,7 @@ func (x *RttMap) String() string {
 func (*RttMap) ProtoMessage() {}
 
 func (x *RttMap) ProtoReflect() protoreflect.Message {
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[3]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -308,7 +308,7 @@ func (x *RttMap) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RttMap.ProtoReflect.Descriptor instead.
 func (*RttMap) Descriptor() ([]byte, []int) {
-	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{3}
+	return file_mesh_discovery_proto_discovery_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *RttMap) GetRttMap() map[string]int64 {
@@ -327,7 +327,7 @@ type RttUpdateRequest struct {
 
 func (x *RttUpdateRequest) Reset() {
 	*x = RttUpdateRequest{}
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[4]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -339,7 +339,7 @@ func (x *RttUpdateRequest) String() string {
 func (*RttUpdateRequest) ProtoMessage() {}
 
 func (x *RttUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_mesh_meshproto_mesh_proto_msgTypes[4]
+	mi := &file_mesh_discovery_proto_discovery_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -352,7 +352,7 @@ func (x *RttUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RttUpdateRequest.ProtoReflect.Descriptor instead.
 func (*RttUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_mesh_meshproto_mesh_proto_rawDescGZIP(), []int{4}
+	return file_mesh_discovery_proto_discovery_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RttUpdateRequest) GetRttMap() map[string]*RttMap {
@@ -362,11 +362,11 @@ func (x *RttUpdateRequest) GetRttMap() map[string]*RttMap {
 	return nil
 }
 
-var File_mesh_meshproto_mesh_proto protoreflect.FileDescriptor
+var File_mesh_discovery_proto_discovery_proto protoreflect.FileDescriptor
 
-const file_mesh_meshproto_mesh_proto_rawDesc = "" +
+const file_mesh_discovery_proto_discovery_proto_rawDesc = "" +
 	"\n" +
-	"\x19mesh/meshproto/mesh.proto\x12\tmeshproto\x1a\x1bgoogle/protobuf/empty.proto\"\xae\x02\n" +
+	"$mesh/discovery/proto/discovery.proto\x12\x05proto\x1a\x1bgoogle/protobuf/empty.proto\"\xae\x02\n" +
 	"\x06IpInfo\x12\x18\n" +
 	"\acountry\x18\x01 \x01(\tR\acountry\x12!\n" +
 	"\fcountry_code\x18\x02 \x01(\tR\vcountryCode\x12\x16\n" +
@@ -382,65 +382,65 @@ const file_mesh_meshproto_mesh_proto_rawDesc = "" +
 	" \x01(\tR\x03isp\x12\x10\n" +
 	"\x03org\x18\v \x01(\tR\x03org\x12\x0e\n" +
 	"\x02as\x18\f \x01(\tR\x02as\x12\x14\n" +
-	"\x05query\x18\r \x01(\tR\x05query\"\xe0\x01\n" +
+	"\x05query\x18\r \x01(\tR\x05query\"\xd8\x01\n" +
 	"\bPeerInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x121\n" +
-	"\x04addr\x18\x02 \x03(\v2\x1d.meshproto.PeerInfo.AddrEntryR\x04addr\x12\x1b\n" +
-	"\tlast_seen\x18\x03 \x01(\x03R\blastSeen\x12/\n" +
-	"\aip_info\x18\x04 \x01(\v2\x11.meshproto.IpInfoH\x00R\x06ipInfo\x88\x01\x01\x1a7\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12-\n" +
+	"\x04addr\x18\x02 \x03(\v2\x19.proto.PeerInfo.AddrEntryR\x04addr\x12\x1b\n" +
+	"\tlast_seen\x18\x03 \x01(\x03R\blastSeen\x12+\n" +
+	"\aip_info\x18\x04 \x01(\v2\r.proto.IpInfoH\x00R\x06ipInfo\x88\x01\x01\x1a7\n" +
 	"\tAddrEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\bR\x05value:\x028\x01B\n" +
 	"\n" +
-	"\b_ip_info\"C\n" +
-	"\x16ListKnownPeersResponse\x12)\n" +
-	"\x05peers\x18\x01 \x03(\v2\x13.meshproto.PeerInfoR\x05peers\"z\n" +
-	"\x06RttMap\x125\n" +
-	"\x06rttMap\x18\x01 \x03(\v2\x1d.meshproto.RttMap.RttMapEntryR\x06rttMap\x1a9\n" +
+	"\b_ip_info\"?\n" +
+	"\x16ListKnownPeersResponse\x12%\n" +
+	"\x05peers\x18\x01 \x03(\v2\x0f.proto.PeerInfoR\x05peers\"v\n" +
+	"\x06RttMap\x121\n" +
+	"\x06rttMap\x18\x01 \x03(\v2\x19.proto.RttMap.RttMapEntryR\x06rttMap\x1a9\n" +
 	"\vRttMapEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\"\xa1\x01\n" +
-	"\x10RttUpdateRequest\x12?\n" +
-	"\x06rttMap\x18\x01 \x03(\v2'.meshproto.RttUpdateRequest.RttMapEntryR\x06rttMap\x1aL\n" +
+	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\"\x99\x01\n" +
+	"\x10RttUpdateRequest\x12;\n" +
+	"\x06rttMap\x18\x01 \x03(\v2#.proto.RttUpdateRequest.RttMapEntryR\x06rttMap\x1aH\n" +
 	"\vRttMapEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12'\n" +
-	"\x05value\x18\x02 \x01(\v2\x11.meshproto.RttMapR\x05value:\x028\x012_\n" +
-	"\x10DiscoveryService\x12K\n" +
-	"\x0eListKnownPeers\x12\x16.google.protobuf.Empty\x1a!.meshproto.ListKnownPeersResponseB\rZ\v./meshprotob\x06proto3"
+	"\x03key\x18\x01 \x01(\tR\x03key\x12#\n" +
+	"\x05value\x18\x02 \x01(\v2\r.proto.RttMapR\x05value:\x028\x012[\n" +
+	"\x10DiscoveryService\x12G\n" +
+	"\x0ePullKnownPeers\x12\x16.google.protobuf.Empty\x1a\x1d.proto.ListKnownPeersResponseB\tZ\a./protob\x06proto3"
 
 var (
-	file_mesh_meshproto_mesh_proto_rawDescOnce sync.Once
-	file_mesh_meshproto_mesh_proto_rawDescData []byte
+	file_mesh_discovery_proto_discovery_proto_rawDescOnce sync.Once
+	file_mesh_discovery_proto_discovery_proto_rawDescData []byte
 )
 
-func file_mesh_meshproto_mesh_proto_rawDescGZIP() []byte {
-	file_mesh_meshproto_mesh_proto_rawDescOnce.Do(func() {
-		file_mesh_meshproto_mesh_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_mesh_meshproto_mesh_proto_rawDesc), len(file_mesh_meshproto_mesh_proto_rawDesc)))
+func file_mesh_discovery_proto_discovery_proto_rawDescGZIP() []byte {
+	file_mesh_discovery_proto_discovery_proto_rawDescOnce.Do(func() {
+		file_mesh_discovery_proto_discovery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_mesh_discovery_proto_discovery_proto_rawDesc), len(file_mesh_discovery_proto_discovery_proto_rawDesc)))
 	})
-	return file_mesh_meshproto_mesh_proto_rawDescData
+	return file_mesh_discovery_proto_discovery_proto_rawDescData
 }
 
-var file_mesh_meshproto_mesh_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
-var file_mesh_meshproto_mesh_proto_goTypes = []any{
-	(*IpInfo)(nil),                 // 0: meshproto.IpInfo
-	(*PeerInfo)(nil),               // 1: meshproto.PeerInfo
-	(*ListKnownPeersResponse)(nil), // 2: meshproto.ListKnownPeersResponse
-	(*RttMap)(nil),                 // 3: meshproto.RttMap
-	(*RttUpdateRequest)(nil),       // 4: meshproto.RttUpdateRequest
-	nil,                            // 5: meshproto.PeerInfo.AddrEntry
-	nil,                            // 6: meshproto.RttMap.RttMapEntry
-	nil,                            // 7: meshproto.RttUpdateRequest.RttMapEntry
+var file_mesh_discovery_proto_discovery_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_mesh_discovery_proto_discovery_proto_goTypes = []any{
+	(*IpInfo)(nil),                 // 0: proto.IpInfo
+	(*PeerInfo)(nil),               // 1: proto.PeerInfo
+	(*ListKnownPeersResponse)(nil), // 2: proto.ListKnownPeersResponse
+	(*RttMap)(nil),                 // 3: proto.RttMap
+	(*RttUpdateRequest)(nil),       // 4: proto.RttUpdateRequest
+	nil,                            // 5: proto.PeerInfo.AddrEntry
+	nil,                            // 6: proto.RttMap.RttMapEntry
+	nil,                            // 7: proto.RttUpdateRequest.RttMapEntry
 	(*emptypb.Empty)(nil),          // 8: google.protobuf.Empty
 }
-var file_mesh_meshproto_mesh_proto_depIdxs = []int32{
-	5, // 0: meshproto.PeerInfo.addr:type_name -> meshproto.PeerInfo.AddrEntry
-	0, // 1: meshproto.PeerInfo.ip_info:type_name -> meshproto.IpInfo
-	1, // 2: meshproto.ListKnownPeersResponse.peers:type_name -> meshproto.PeerInfo
-	6, // 3: meshproto.RttMap.rttMap:type_name -> meshproto.RttMap.RttMapEntry
-	7, // 4: meshproto.RttUpdateRequest.rttMap:type_name -> meshproto.RttUpdateRequest.RttMapEntry
-	3, // 5: meshproto.RttUpdateRequest.RttMapEntry.value:type_name -> meshproto.RttMap
-	8, // 6: meshproto.DiscoveryService.ListKnownPeers:input_type -> google.protobuf.Empty
-	2, // 7: meshproto.DiscoveryService.ListKnownPeers:output_type -> meshproto.ListKnownPeersResponse
+var file_mesh_discovery_proto_discovery_proto_depIdxs = []int32{
+	5, // 0: proto.PeerInfo.addr:type_name -> proto.PeerInfo.AddrEntry
+	0, // 1: proto.PeerInfo.ip_info:type_name -> proto.IpInfo
+	1, // 2: proto.ListKnownPeersResponse.peers:type_name -> proto.PeerInfo
+	6, // 3: proto.RttMap.rttMap:type_name -> proto.RttMap.RttMapEntry
+	7, // 4: proto.RttUpdateRequest.rttMap:type_name -> proto.RttUpdateRequest.RttMapEntry
+	3, // 5: proto.RttUpdateRequest.RttMapEntry.value:type_name -> proto.RttMap
+	8, // 6: proto.DiscoveryService.PullKnownPeers:input_type -> google.protobuf.Empty
+	2, // 7: proto.DiscoveryService.PullKnownPeers:output_type -> proto.ListKnownPeersResponse
 	7, // [7:8] is the sub-list for method output_type
 	6, // [6:7] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
@@ -448,27 +448,27 @@ var file_mesh_meshproto_mesh_proto_depIdxs = []int32{
 	0, // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_mesh_meshproto_mesh_proto_init() }
-func file_mesh_meshproto_mesh_proto_init() {
-	if File_mesh_meshproto_mesh_proto != nil {
+func init() { file_mesh_discovery_proto_discovery_proto_init() }
+func file_mesh_discovery_proto_discovery_proto_init() {
+	if File_mesh_discovery_proto_discovery_proto != nil {
 		return
 	}
-	file_mesh_meshproto_mesh_proto_msgTypes[1].OneofWrappers = []any{}
+	file_mesh_discovery_proto_discovery_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mesh_meshproto_mesh_proto_rawDesc), len(file_mesh_meshproto_mesh_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mesh_discovery_proto_discovery_proto_rawDesc), len(file_mesh_discovery_proto_discovery_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_mesh_meshproto_mesh_proto_goTypes,
-		DependencyIndexes: file_mesh_meshproto_mesh_proto_depIdxs,
-		MessageInfos:      file_mesh_meshproto_mesh_proto_msgTypes,
+		GoTypes:           file_mesh_discovery_proto_discovery_proto_goTypes,
+		DependencyIndexes: file_mesh_discovery_proto_discovery_proto_depIdxs,
+		MessageInfos:      file_mesh_discovery_proto_discovery_proto_msgTypes,
 	}.Build()
-	File_mesh_meshproto_mesh_proto = out.File
-	file_mesh_meshproto_mesh_proto_goTypes = nil
-	file_mesh_meshproto_mesh_proto_depIdxs = nil
+	File_mesh_discovery_proto_discovery_proto = out.File
+	file_mesh_discovery_proto_discovery_proto_goTypes = nil
+	file_mesh_discovery_proto_discovery_proto_depIdxs = nil
 }
