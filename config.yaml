@@ -1,0 +1,36 @@
+
+auth:
+  jwt_secret: "sraka"
+  root_ca: "ca.crt"
+
+egress:
+  egress1_name:
+    iface_in_name: "liberator"
+    iface_out_name: "enp11s0"
+    
+ingress:
+  ingress1_name:
+    listen_addr: ":2100"
+    cert: "node.crt"
+
+bridge:
+  bridge1_name:
+    ingress: "ingress1_name"
+    egress: "egress1_name"
+    cidr: "10.8.0.0/16"
+    mtu: 1400
+    dns: "8.8.8.8"
+
+
+mesh:
+  listen_addr: ":9000"
+  bootstrap_addr:
+    - "17.2.2.1:9000"
+    - "81.12.66.2:9000"
+  peers_store: "peers.json"
+  discovery_interval: 30s 
+  rtt_update_interval: 10s
+
+
+metrics:
+  listen_addr: ":9090"
