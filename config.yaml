@@ -3,20 +3,16 @@ auth:
   jwt_secret: "sraka"
   root_ca: "ca.crt"
 
-egress:
-  egress1_name:
-    iface_in_name: "liberator"
-    iface_out_name: "enp11s0"
-    
-ingress:
-  ingress1_name:
-    listen_addr: ":2100"
-    cert: "node.crt"
 
 bridge:
   bridge1_name:
-    ingress: "ingress1_name"
-    egress: "egress1_name"
+    ingress:
+      listen_addr: ":2100"
+      cert: "node.crt"
+      key: "node.key"
+    egress:
+      iface_in_name: "liberator"
+      iface_out_name: "enp11s0"
     cidr: "10.8.0.0/16"
     mtu: 1400
     dns: "8.8.8.8"

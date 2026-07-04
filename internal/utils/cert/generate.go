@@ -1,101 +1,14 @@
-package main
+package cert
 
 import (
-	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"fmt"
-	"liberator-node-go/internal/appconfig"
-	"liberator-node-go/internal/utils/liberatorjwt"
-	"liberator-node-go/pkg/bridge"
-	"liberator-node-go/pkg/mesh"
-
 	"math/big"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-func createNode(ctx context.Context, rootCert *x509.Certificate, priv_key []byte, bootstrap []string) *mesh.MeshNode {
-	_, n1Priv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-	n1Cert, err := IssueNodeCertificate(n1Priv, "node", rootCert, priv_key)
-	if err != nil {
-		panic(err)
-	}
-
-	node1, err := mesh.New(ctx, &mesh.MeshConfig{
-		ListenAddr:     ":0",
-		BootstrapNodes: bootstrap,
-	}, n1Cert, rootCert)
-	if err != nil {
-		panic(err)
-	}
-
-	return node1
-}
-
-func main() {
-	cfg, err := appconfig.LoadAppConfig("./config.yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx := context.Background()
-
-	_, priv_key, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-
-	rootCert, err := GenerateRootCA(priv_key)
-	if err != nil {
-		panic(err)
-	}
-
-	// Start ingress
-	_, igPriv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-	ingressCert, err := IssueNodeCertificate(igPriv, "ingress", rootCert, priv_key)
-	if err != nil {
-		panic(err)
-	}
-
-	jwtIss := liberatorjwt.New([]byte(cfg.Auth.JWTSecret))
-
-	bridges := map[string]*bridge.Bridge{}
-	for name, br := range cfg.Bridge {
-		bridge, err := bridge.New(ctx, br, jwtIss, ingressCert)
-		if err != nil {
-			panic(err)
-		}
-		go bridge.Run()
-		bridges[name] = bridge
-	}
-
-	token, err := jwtIss.SignToken(uuid.MustParse("a784a74d-ce92-4648-865f-2bd02a4d07ce"))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Original Token: ", token, "\n")
-
-	for range 5 {
-		token, err := jwtIss.SignToken(uuid.New())
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("New Token: ", token, "\n")
-	}
-
-	select {}
-}
 
 func GenerateRootCA(privKey ed25519.PrivateKey) (*x509.Certificate, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
