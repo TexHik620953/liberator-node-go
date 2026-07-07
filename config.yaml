@@ -1,7 +1,5 @@
-
 auth:
   jwt_secret: "sraka"
-  root_ca: "ca.crt"
 
 
 bridge:
@@ -19,7 +17,6 @@ bridge:
       iface_in_name: "liberator"
       iface_out_name: "amn0"
 
-
 mesh:
   listen_addr: ":9000"
   bootstrap_addrs:
@@ -31,6 +28,13 @@ mesh:
   cert: "./certs/node_0.crt"
   key: "./certs/node_0.key"
   root_cert: "./certs/root.crt"
+
+database:
+  host: "localhost"
+  port: 5433
+  user: "postgres"
+  password: "HermanFuLLer"
+  database: "default"
 
 
 metrics:
