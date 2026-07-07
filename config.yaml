@@ -5,10 +5,10 @@ auth:
 
 
 bridge:
-  bridge1_name:
-    cidr: "10.8.0.0/16"
+  bridge1:
+    cidr: "10.8.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
     mtu: 1400
-    dns: "1.1.1.1"
+    dns: "1.1.1.1" # Where to proxy dns requests
     ingresses:
       liberator0:
         type: "liberator"
@@ -22,12 +22,15 @@ bridge:
 
 mesh:
   listen_addr: ":9000"
-  bootstrap_addr:
+  bootstrap_addrs:
     - "17.2.2.1:9000"
     - "81.12.66.2:9000"
   peers_store: "peers.json"
   discovery_interval: 30s 
   rtt_update_interval: 10s
+  cert: "./certs/node_0.crt"
+  key: "./certs/node_0.key"
+  root_cert: "./certs/root.crt"
 
 
 metrics:
