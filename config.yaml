@@ -6,16 +6,18 @@ auth:
 
 bridge:
   bridge1_name:
-    ingress:
-      listen_addr: ":2100"
-      cert: "node.crt"
-      key: "node.key"
-    egress:
-      iface_in_name: "liberator"
-      iface_out_name: "enp11s0"
     cidr: "10.8.0.0/16"
     mtu: 1400
-    dns: "8.8.8.8"
+    dns: "1.1.1.1"
+    ingresses:
+      liberator0:
+        type: "liberator"
+        listen_addr: ":2100"
+        cert: "./certs/node_0.crt"
+        key: "./certs/node_0.key"
+    egress:
+      iface_in_name: "liberator"
+      iface_out_name: "amn0"
 
 
 mesh:
