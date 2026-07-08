@@ -4,28 +4,28 @@ auth:
 
 bridge:
   bridge1:
-    cidr: "10.8.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
+    cidr: "10.9.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
     mtu: 1376
     dns: "1.1.1.1" # Where to proxy dns requests
     ingresses:
       liberator0:
         type: "liberator"
-        listen_addr: ":2100"
-        cert: "./certs/node_0.crt"
-        key: "./certs/node_0.key"
+        listen_addr: ":2101"
+        cert: "./certs/node_1.crt"
+        key: "./certs/node_1.key"
     egress:
-      iface_in_name: "liberator"
+      iface_in_name: "liberator1"
       iface_out_name: "amn0"
 
 mesh:
-  listen_addr: ":9000"
+  listen_addr: ":9001"
   bootstrap_addrs:
-    - "localhost:9001"
+    - "localhost:9000"
   peers_store: "peers.json"
   discovery_interval: 30s 
   rtt_update_interval: 10s
-  cert: "./certs/node_0.crt"
-  key: "./certs/node_0.key"
+  cert: "./certs/node_1.crt"
+  key: "./certs/node_1.key"
   root_cert: "./certs/root.crt"
 
 database:
@@ -37,4 +37,4 @@ database:
 
 
 metrics:
-  listen_addr: ":9090"
+  listen_addr: ":9091"
