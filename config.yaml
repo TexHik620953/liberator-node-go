@@ -10,12 +10,6 @@ bridge:
     iface_in_name: "liberator"
     iface_out_name: "amn0"
   ingresses:
-    quic1:
-      type: "quic"    
-      mtu: 1500
-      listen_addr: ":2100"
-      cert: "./certs/node_0.crt"
-      key: "./certs/node_0.key"
     awg:
       type: "awg"
       mtu: 1500
