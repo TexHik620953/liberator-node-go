@@ -6,25 +6,27 @@ bridge:
   global_cidr: 10.0.0.0/8
   cidr: "10.8.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
   egress:
-    mtu: 1500
+    mtu: 1250
     iface_in_name: "liberator"
     iface_out_name: "amn0"
   ingresses:
     awg:
       type: "awg"
-      mtu: 1500
+
+      mtu: 1280
       listen_addr: ":2200"
       private_key: "2f878af7e796bb392306fc4e1379b870b53de2c0ed89a086fbc059f17c5d7829" # 32bytes hex encoded key
-      h1: "1245955480-1579617642" # Диапазоны можно задать вручную
-      h2: "1827874969-1854585193" # Или сгенерировать и вставить
+      watchdog_interval: "30s"
+
+      h1: "1245955480-1579617642"
+      h2: "1827874969-1854585193"
       h3: "2137919667-2143439009"
       h4: "2147159423-2147402519"
-      jc: 5
-      jmin: 10
-      jmax: 50
+      jc: 1
+      jmin: 1
+      jmax: 2
       s1: 256
       s2: 128
-
 
 mesh:
   listen_addr: ":9000"
