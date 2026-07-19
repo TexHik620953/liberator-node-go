@@ -2,14 +2,14 @@ auth:
   jwt_secret: "sraka"
 
 
-bridge:
+tun:
+  mtu: 1250
+  iface_in_name: "liberator"
+  iface_out_name: "amn0"
+router:
   global_cidr: 10.0.0.0/8
   cidr: "10.8.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
-  egress:
-    mtu: 1250
-    iface_in_name: "liberator"
-    iface_out_name: "amn0"
-  ingresses:
+  transports:
     awg:
       type: "awg"
 
