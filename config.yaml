@@ -1,7 +1,6 @@
 auth:
   jwt_secret: "sraka"
 
-
 tun:
   mtu: 1250
   iface_in_name: "liberator"
@@ -14,7 +13,7 @@ router:
       type: "awg"
 
       mtu: 1280
-      listen_addr: ":2200"
+      listen_port: 2200
       private_key: "2f878af7e796bb392306fc4e1379b870b53de2c0ed89a086fbc059f17c5d7829" # 32bytes hex encoded key
       watchdog_interval: "30s"
 
@@ -22,11 +21,15 @@ router:
       h2: "1827874969-1854585193"
       h3: "2137919667-2143439009"
       h4: "2147159423-2147402519"
-      jc: 1
-      jmin: 1
-      jmax: 2
-      s1: 256
-      s2: 128
+
+      jc: 5
+      jmin: 70
+      jmax: 120
+
+      s1: 48
+      s2: 27
+      s3: 30
+      s4: 7
 
 mesh:
   listen_addr: ":9000"
@@ -42,6 +45,10 @@ mesh:
 database:
   file: "./database.sqlite"
 
-
 metrics:
   listen_addr: ":9090"
+
+
+api:
+  grpc:
+    listen_addr: ":9001"
