@@ -2,7 +2,7 @@ auth:
   jwt_secret: "sraka"
 
 tun:
-  mtu: 1250
+  mtu: 1420 # Всегда должен быть меньше наименьшего транспорта
   iface_in_name: "liberator"
   iface_out_name: "amn0"
 router:
@@ -12,7 +12,7 @@ router:
     awg:
       type: "awg"
 
-      mtu: 1280
+      mtu: 1500
       listen_port: 2200
       private_key: "2f878af7e796bb392306fc4e1379b870b53de2c0ed89a086fbc059f17c5d7829" # 32bytes hex encoded key
       watchdog_interval: "30s"
