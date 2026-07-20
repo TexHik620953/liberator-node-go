@@ -40,11 +40,7 @@ mesh:
   root_cert: "./certs/root.crt"
 
 database:
-  host: "localhost"
-  port: 5433
-  user: "postgres"
-  password: "HermanFuLLer"
-  database: "default"
+  file: "./database.sqlite"
 
 
 metrics:
