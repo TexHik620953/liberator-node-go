@@ -1,5 +1,8 @@
 auth:
   jwt_secret: "sraka"
+  cert: "./certs/node_0.crt"
+  key: "./certs/node_0.key"
+  root_cert: "./certs/root.crt"
 
 tun:
   mtu: 1420 # Всегда должен быть меньше наименьшего транспорта
@@ -38,9 +41,6 @@ mesh:
   peers_store: "peers.json"
   discovery_interval: 30s 
   rtt_update_interval: 10s
-  cert: "./certs/node_0.crt"
-  key: "./certs/node_0.key"
-  root_cert: "./certs/root.crt"
 
 database:
   file: "./database.sqlite"
