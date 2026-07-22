@@ -1,6 +1,6 @@
--- +goose Up
--- +goose StatementBegin
+package app
 
+const initDB = `
 -- Таблица peers (информация о клиентах)
 CREATE TABLE if not exists peers (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,13 +33,9 @@ CREATE TABLE if not exists  peers_rules (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_peers_rules_unique ON peers_rules(peer_id, target_ip, protocol, port_range_start, port_range_end);
 -- Индекс для связи по peer_id (ускоряет JOIN)
 CREATE INDEX IF NOT EXISTS idx_peers_rules_peer_id ON peers_rules(peer_id);
+`
 
-
-
--- +goose StatementEnd
-
--- +goose Down
--- +goose StatementBegin
-drop table if exists peers;
-drop table if exists peers_rules;
--- +goose StatementEnd
+func (app *App) migrateDatabase() error {
+	_, err := app.db.Exec(initDB)
+	return err
+}
