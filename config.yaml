@@ -5,17 +5,17 @@ auth:
   root_cert: "./certs/root.crt"
 
 tun:
-  mtu: 1420 # Всегда должен быть меньше наименьшего транспорта
+  mtu: 1376 # Всегда должен быть меньше наименьшего транспорта
   iface_in_name: "liberator"
   iface_out_name: "amn0"
 router:
   global_cidr: 10.0.0.0/8
-  cidr: "10.8.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
+  cidr: "10.9.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
   transports:
     awg:
       type: "awg"
 
-      mtu: 1372
+      mtu: 1376
       listen_port: 2200
       private_key: "2f878af7e796bb392306fc4e1379b870b53de2c0ed89a086fbc059f17c5d7829" # 32bytes hex encoded key
       watchdog_interval: "30s"
