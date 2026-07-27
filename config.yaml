@@ -37,7 +37,7 @@ router:
 mesh:
   listen_addr: ":9000"
   bootstrap_addrs:
-    - "localhost:9001"
+    - "144.31.133.121:9001"
   peers_store: "peers.json"
   discovery_interval: 30s 
   rtt_update_interval: 10s
