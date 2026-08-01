@@ -9,8 +9,6 @@ tun:
   iface_in_name: "liberator"
   iface_out_name: "amn0"
 router:
-  global_cidr: 10.0.0.0/8
-  cidr: "10.9.0.1/16" # Addr here corresponds to gateway(vpn server host), dns server launched here
   transports:
     awg:
       type: "awg"
