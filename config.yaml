@@ -52,3 +52,5 @@ metrics:
 api:
   grpc:
     listen_addr: ":9001"
+  http:
+    listen_addr: ":8080"
