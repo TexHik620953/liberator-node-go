@@ -1,13 +1,13 @@
 auth:
   jwt_secret: "sraka"
-  cert: "./certs/node_2.crt"
-  key: "./certs/node_2.key"
-  root_cert: "./certs/root.crt"
+  cert: "./node.crt"
+  key: "./node.key"
+  root_cert: "./root.crt"
 
 tun:
   mtu: 1376 # Всегда должен быть меньше наименьшего транспорта
   iface_in_name: "liberator"
-  iface_out_name: "amn0"
+  iface_out_name: ""
 router:
   transports:
     awg:
