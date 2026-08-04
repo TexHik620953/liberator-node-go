@@ -1,5 +1,7 @@
 auth:
-  jwt_secret: "sraka"
+  # Сгенерировать случайный секрет, напр.: openssl rand -hex 32
+  # Минимум 16 символов, иначе нода не стартует.
+  jwt_secret: "CHANGE_ME_random_secret_min_16_chars"
   cert: "./node.crt"
   key: "./node.key"
   root_cert: "./root.crt"
@@ -15,7 +17,8 @@ router:
 
       mtu: 1376
       listen_port: 2200
-      private_key: "2f878af7e796bb392306fc4e1379b870b53de2c0ed89a086fbc059f17c5d7829" # 32bytes hex encoded key
+      # Приватный ключ сервера AmneziaWG (32 байта hex). Сгенерировать свой, не переиспользовать.
+      private_key: "CHANGE_ME_32byte_hex_private_key"
       watchdog_interval: "30s"
 
       h1: "1245955480-1579617642"
@@ -37,7 +40,7 @@ mesh:
   bootstrap_addrs:
     - "144.31.133.121:9000"
   peers_store: "peers.json"
-  discovery_interval: 30s 
+  discovery_interval: 30s
   rtt_update_interval: 10s
 
 database:
